@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Typing Test with Paragraph Options</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f8ff;
+      text-align: center;
+      padding: 40px;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: #ffffff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #00796b;
+    }
+    input, textarea, select, button {
+      width: 90%;
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 16px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background-color: #00796b;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #004d40;
+    }
+    #text-to-type {
+      font-size: 18px;
+      margin: 20px 0;
+      text-align: left;
+      line-height: 1.6;
+      background: #f9f9f9;
+      padding: 15px;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+    }
+    .correct { color: green; }
+    .incorrect { color: red; }
+    .current { background-color: yellow; }
+    #result {
+      font-size: 18px;
+      color: #388e3c;
+      margin-top: 20px;
+    }
+    #timer {
+      font-size: 20px;
+      color: #d32f2f;
+      margin-top: 10px;
+    }
+    #finish-btn {
+      display: none;
+      background-color: #d32f2f;
+      margin-top: 10px;
+    }
+    #finish-btn:hover {
+      background-color: #b71c1c;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Typing Test</h1>
+
+    <input type="text" id="user-name" placeholder="Enter your name">
+    <input type="number" id="test-time" placeholder="Set time in seconds (e.g. 60)">
+
+    <select id="paragraph-select" onchange="loadSelectedParagraph()">
+      <option value="0">Paragraph 1</option>
+      <option value="1">Paragraph 2</option>
+      <option value="2">Paragraph 3</option>
+       <option value="3">Paragraph 4</option>
+      <option value="custom">Add Your Own Paragraph</option>
+    </select>
+
+    <textarea id="custom-paragraph" placeholder="Write your own paragraph here..." style="display:none;"></textarea>
+
+    <div id="text-to-type"></div>
+    <textarea id="user-input" placeholder="Start typing here..." disabled></textarea>
+
+    <button onclick="startTest()">Start Test</button>
+    <button id="finish-btn" onclick="endTest()">Finish Now</button>
+    <div id="timer"></div>
+    <p id="result"></p>
+  </div>
+
+  <script>
+    const paragraphs = [
+      `Typing is a fundamental skill in the digital age. Whether you're writing emails, coding, or chatting with friends, being able to type quickly and accurately saves time and boosts productivity.`,
+      `The sun rises in the east and sets in the west. This daily cycle affects everything from farming to sleep patterns, and has inspired countless poems and traditions across cultures.`,
+      `Technology continues to evolve rapidly, changing the way we live, work, and communicate. Staying updated with new tools and trends is essential in today’s fast-paced world.`,
+      `Hermes is a Greek Olympian, god. Born to Zeus and Maya, Hermes is known for his quick thinking and cunning nature. He is the youngest of the Olympians and known for moving quickly between the divine and mortal worlds. Because of this power, Hermes often acted as a messenger between the men and the Olympians. A benevolent god, Hermes protects travellers and athletes. He is also known as mischievous as he often plays tricks on other gods. He does this for his own amusement or to save people from the wrath of the gods. Hermes is also the fastest of all the gods because he has wings with his sandals. Interestingly, even when Hermes was a child he could not resist the urge to steal. Therefore, he is also credited as the patron god of all thieves.`
+    ];
+
+    let fullText = paragraphs[0];
+    let startTime;
+    let timerInterval;
+    let timeLimit;
+    let isStarted = false;
+
+    function loadSelectedParagraph() {
+      const select = document.getElementById("paragraph-select");
+      const value = select.value;
+
+      if (value === "custom") {
+        document.getElementById("custom-paragraph").style.display = "block";
+        fullText = "";
+        document.getElementById("text-to-type").innerText = "";
+      } else {
+        document.getElementById("custom-paragraph").style.display = "none";
+        fullText = paragraphs[parseInt(value)];
+        displayText(0);
+      }
+    }
+
+    function displayText(highlightIndex = -1, typed = "") {
+      let html = "";
+      for (let i = 0; i < fullText.length; i++) {
+        let char = fullText[i];
+        if (i < typed.length) {
+          html += `<span class="${typed[i] === char ? 'correct' : 'incorrect'}">${char}</span>`;
+        } else if (i === highlightIndex) {
+          html += `<span class="current">${char}</span>`;
+        } else {
+          html += `<span>${char}</span>`;
+        }
+      }
+      document.getElementById("text-to-type").innerHTML = html;
+    }
+
+    function startTest() {
+      const name = document.getElementById("user-name").value.trim();
+      timeLimit = parseInt(document.getElementById("test-time").value);
+
+      if (!name) {
+        alert("Please enter your name.");
+        return;
+      }
+      if (isNaN(timeLimit) || timeLimit <= 0) {
+        alert("Please enter a valid time in seconds.");
+        return;
+      }
+
+      const select = document.getElementById("paragraph-select").value;
+      if (select === "custom") {
+        const customText = document.getElementById("custom-paragraph").value.trim();
+        if (!customText) {
+          alert("Please enter your custom paragraph.");
+          return;
+        }
+        fullText = customText;
+      }
+
+      document.getElementById("user-input").value = "";
+      document.getElementById("result").innerText = "";
+      document.getElementById("user-input").disabled = false;
+      document.getElementById("user-input").focus();
+      document.getElementById("finish-btn").style.display = "inline-block";
+
+      startTime = new Date();
+      isStarted = true;
+      displayText(0);
+
+      let timeLeft = timeLimit;
+      document.getElementById("timer").innerText = `⏳ Time left: ${timeLeft}s`;
+
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        document.getElementById("timer").innerText = `⏳ Time left: ${timeLeft}s`;
+        if (timeLeft <= 0) {
+          endTest();
+        }
+      }, 1000);
+    }
+
+    function endTest() {
+      if (!isStarted) return;
+
+      clearInterval(timerInterval);
+      document.getElementById("user-input").disabled = true;
+      document.getElementById("finish-btn").style.display = "none";
+      isStarted = false;
+
+      const typedText = document.getElementById("user-input").value;
+      const endTime = new Date();
+      const timeTaken = (endTime - startTime) / 1000;
+
+      const wpm = Math.round((typedText.length / 5) / (timeTaken / 60));
+      let correctChars = 0;
+      for (let i = 0; i < typedText.length; i++) {
+        if (typedText[i] === fullText[i]) correctChars++;
+      }
+      const accuracy = Math.round((correctChars / fullText.length) * 100);
+
+      const name = document.getElementById("user-name").value;
+      document.getElementById("result").innerText = `✅ ${name}, your speed is ${wpm} WPM with ${accuracy}% accuracy.`;
+    }
+
+    document.getElementById("user-input").addEventListener("input", function () {
+      if (!isStarted) return;
+
+      const typedText = document.getElementById("user-input").value;
+      displayText(typedText.length, typedText);
+
+      if (typedText === fullText) {
+        endTest();
+      }
+    });
+
+    // Load default paragraph on page load
+    window.onload = () => displayText(0);
+  </script>
+
+</body>
+</html>
