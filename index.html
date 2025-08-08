@@ -46,6 +46,9 @@
       padding: 15px;
       border-radius: 5px;
       border: 1px solid #ddd;
+      max-height: 200px;
+      overflow-y: auto;
+      white-space: pre-wrap;
     }
     .correct { color: green; }
     .incorrect { color: red; }
@@ -82,8 +85,8 @@
       <option value="0">Paragraph 1</option>
       <option value="1">Paragraph 2</option>
       <option value="2">Paragraph 3</option>
-       <option value="3">Paragraph 4</option>
-       <option value="4">Paragraph 5</option>
+      <option value="3">Paragraph 4</option>
+      <option value="4">Paragraph 5</option>
       <option value="custom">Add Your Own Paragraph</option>
     </select>
 
@@ -144,7 +147,14 @@ In conclusion, technology has profoundly influenced every aspect of human life, 
           html += `<span>${char}</span>`;
         }
       }
-      document.getElementById("text-to-type").innerHTML = html;
+      const textContainer = document.getElementById("text-to-type");
+      textContainer.innerHTML = html;
+
+      // Auto-scroll to the current character
+      textContainer.querySelector(".current")?.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest"
+      });
     }
 
     function startTest() {
